@@ -133,7 +133,8 @@ int main()
     {
         bool clear = false;
         void* ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-        for (int i = 0; i < 5; i++) {
+        spdlog::info("Replay speed: {}", camera.ReplaySpeed);
+        for (int i = 0; i < camera.ReplaySpeed; i++) {
             unsigned int timestamp = timestamps[frameIndex];
             spdlog::debug("Loading frame {} at {}", frameIndex, timestamp);
             frameIndex++;
@@ -142,7 +143,7 @@ int main()
                 bzero(ptr, amount * sizeof(glm::vec3));
             }
             size_t size = frameProvider.GetDelta(timestamp, (glm::vec3*)ptr, amount);
-            spdlog::info("Loaded {} locations from frame {}", size, timestamp);
+            spdlog::debug("Loaded {} locations from frame {}", size, timestamp);
         }
         glUnmapBuffer(GL_ARRAY_BUFFER);
 
@@ -211,6 +212,10 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(DOWN, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.ProcessKeyboard(UP, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+        camera.ProcessKeyboard(SLOW, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+        camera.ProcessKeyboard(FAST, deltaTime);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
