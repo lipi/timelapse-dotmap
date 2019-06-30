@@ -84,6 +84,10 @@ public:
             Position += Up * velocity;
         if (direction == DOWN)
             Position -= Up * velocity;
+
+       if (Position.z < 0.11) {
+           Position.z = 0.11;
+       }
     }
 
     // Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
