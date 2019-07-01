@@ -11,7 +11,7 @@ import sqlite3
 from datetime import datetime
 
 def insert_frame(conn, cursor, timestamp, frame):
-    sql = 'REPLACE INTO frame (timestamp, frame) VALUES (?, ?)'
+    sql = 'REPLACE INTO delta (timestamp, frame) VALUES (?, ?)'
     cursor.execute(sql, (timestamp, sqlite3.Binary(frame)))
     conn.commit()
     print('Written {} bytes ({} slots) into database at {}'.format(len(frame), len(frame) / 12, timestamp))
@@ -43,7 +43,7 @@ if __name__ == '__main__':
                 dt = datetime.strptime(date.split('.')[0], '%Y-%m-%d %H:%M:%S')
                 ts = int(dt.timestamp())
 
-                if ts != timestamp and timestamp:
+                if ts != timestamp:
                     insert_frame(conn, cursor, timestamp, frame)
                     timestamp = ts
                     frame = bytes()

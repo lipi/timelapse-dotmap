@@ -1,8 +1,6 @@
 
-
 #include <cstdlib>
 
-#include <sqlite3.h>
 #include <spdlog/spdlog.h>
 
 #include "frame.h"

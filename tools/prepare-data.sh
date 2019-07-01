@@ -34,8 +34,8 @@ time for f in *.csv; do python3 ../../tools/keyframe.py ../master.csv $f $f.bin 
 
 echo "Inserting keyframes to database..."
 # create sqlite DB
-sqlite3 -line frame.db 'create table keyframe (timestamp integer primary key, frame blob not null);'
-sqlite3 -line frame.db 'create table frame (timestamp integer primary key, frame blob not null);'
+sqlite3 -line frame.db 'create table snapshot (timestamp integer primary key, frame blob not null);'
+sqlite3 -line frame.db 'create table delta (timestamp integer primary key, frame blob not null);'
 # insert keyframes to DB (~4 min)
 time for f in *.bin; do python3 ../../tools/insert-keyframe.py ../../frames.db $f; done
 
