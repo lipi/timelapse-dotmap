@@ -17,8 +17,8 @@ class Frame  {
     public:
         Frame(const char* filename);
         std::vector<uint32_t> GetTimestamps();
-        size_t GetSnapshot(uint32_t timestamp, glm::vec3* buffer, size_t size);
-        size_t GetDelta(uint32_t timestamp, glm::vec3* buffer, size_t size);
+        size_t GetSnapshot(uint32_t timestamp, glm::vec2* buffer, size_t size);
+        size_t GetDelta(uint32_t timestamp, glm::vec2* buffer, size_t size);
 };
 
 #endif // __FRAME_H__

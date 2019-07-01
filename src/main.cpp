@@ -92,9 +92,9 @@ int main()
 
     // generate a large list of semi-random model transformation matrices
     // ------------------------------------------------------------------
-    unsigned int amount = 100000;
-    glm::vec3* positionVectors;
-    positionVectors = new glm::vec3[amount];
+    unsigned int amount = 70000; // TODO: dynamic allocation
+    glm::vec2* positionVectors;
+    positionVectors = new glm::vec2[amount];
 
     Frame frameProvider("frames.db");
     std::vector<uint32_t> timestamps = frameProvider.GetTimestamps();
@@ -108,7 +108,7 @@ int main()
     unsigned int buffer;
     glGenBuffers(1, &buffer);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::vec3), &positionVectors[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::vec2), &positionVectors[0], GL_STATIC_DRAW);
 
     // set transformation matrices as an instance vertex attribute (with divisor 1)
     // note: we're cheating a little by taking the, now publicly declared, VAO of the model's mesh(es) and adding new vertexAttribPointers
@@ -118,9 +118,9 @@ int main()
     {
         unsigned int VAO = dot.meshes[i].VAO;
         glBindVertexArray(VAO);
-        // set attribute pointers for vec3
+        // set attribute pointers for vec2
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
+        glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (void*)0);
 
         glVertexAttribDivisor(3, 1);
 
@@ -140,9 +140,9 @@ int main()
             frameIndex++;
             frameIndex %= timestamps.size();
             if (clear) {
-                bzero(ptr, amount * sizeof(glm::vec3));
+                bzero(ptr, amount * sizeof(glm::vec2));
             }
-            size_t size = frameProvider.GetDelta(timestamp, (glm::vec3*)ptr, amount);
+            size_t size = frameProvider.GetDelta(timestamp, (glm::vec2*)ptr, amount);
             spdlog::debug("Loaded {} locations from frame {}", size, timestamp);
         }
         glUnmapBuffer(GL_ARRAY_BUFFER);

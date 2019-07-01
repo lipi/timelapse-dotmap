@@ -27,7 +27,7 @@ std::vector<uint32_t> Frame::GetTimestamps() {
     return timestamps;
 }
 
-size_t Frame::GetSnapshot(uint32_t timestamp, glm::vec3* buffer, size_t numLocations) {
+size_t Frame::GetSnapshot(uint32_t timestamp, glm::vec2* buffer, size_t numLocations) {
     const void* blobData = NULL;
     size_t blobSize;
     size_t locationSize = sizeof(float) * 2;
@@ -43,8 +43,8 @@ size_t Frame::GetSnapshot(uint32_t timestamp, glm::vec3* buffer, size_t numLocat
 
         float* floatData = (float*)blobData;
         spdlog::debug("converting {} floats ({} locations)", 2 * numLocations, numLocations);
-        for (size_t i = 0; i < numLocations; i++) {
-            buffer[i] = glm::vec3(floatData[2 * i+1], floatData[2 * i], 0);
+        for (size_t i = 0; i < numLocations; i++) { // TODO: in-situ blob placement by sqlite?
+            buffer[i] = glm::vec2(floatData[2 * i+1], floatData[2 * i]);
         }
     }
     m_SnapshotQuery.clearBindings();
@@ -59,7 +59,7 @@ typedef struct {
     float lon;
 } item_t;
 
-size_t Frame::GetDelta(uint32_t timestamp, glm::vec3* buffer, size_t numLocations) {
+size_t Frame::GetDelta(uint32_t timestamp, glm::vec2* buffer, size_t numLocations) {
     const void* blobData = NULL;
     size_t blobSize;
     size_t locationSize = sizeof(item_t);
@@ -77,7 +77,7 @@ size_t Frame::GetDelta(uint32_t timestamp, glm::vec3* buffer, size_t numLocation
         spdlog::debug("converting {} floats ({} locations)", 2 * numLocations, numLocations);
         for (size_t i = 0; i < numLocations; i++) {
             uint32_t index = items[i].index;
-            buffer[index] = glm::vec3(items[i].lon, items[i].lat, 0.0);
+            buffer[index] = glm::vec2(items[i].lon, items[i].lat);
         }
     }
     m_DeltaQuery.clearBindings();
