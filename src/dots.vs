@@ -7,11 +7,12 @@ out vec2 TexCoords;
 
 uniform mat4 projection;
 uniform mat4 view;
-uniform float zoom;
+uniform float dot_scale;
+uniform float x_scale;
 
 void main()
 {
     TexCoords = aTexCoords;
-    gl_Position = projection * view * vec4(aPos.x/200 * zoom + aOffset.x, 
-                                           aPos.y/200 * zoom + aOffset.y, 0.0f, 1.0f); 
+    gl_Position = projection * view * vec4(aPos.x * dot_scale + aOffset.x * x_scale, 
+                                           aPos.y * dot_scale + aOffset.y, 0.0f, 1.0f); 
 }

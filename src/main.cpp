@@ -23,11 +23,12 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 
 // settings
-const unsigned int SCR_WIDTH = 1280 * 2;
-const unsigned int SCR_HEIGHT = 720 * 2;
+const unsigned int SCR_WIDTH = 1280;
+const unsigned int SCR_HEIGHT = 720;
+const float X_SCALE = 0.7f;
 
 // camera
-Camera camera(glm::vec3(174.0f, -40, 10.0f));
+Camera camera(glm::vec3(174.0f * X_SCALE, -40, 10.0f));
 float lastX = (float)SCR_WIDTH / 2.0;
 float lastY = (float)SCR_HEIGHT / 2.0;
 bool firstMouse = true;
@@ -80,7 +81,7 @@ int main()
     // -----------------------------
     // blend
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);  
 
     // build and compile shaders
     // -------------------------
@@ -165,11 +166,12 @@ int main()
         // configure transformation matrices
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        float zoom = camera.Position.z;
+        float dot_scale = camera.Position.z / 200.0f;
         dotShader.use();
         dotShader.setMat4("projection", projection);
         dotShader.setMat4("view", view);
-        dotShader.setFloat("zoom", zoom);
+        dotShader.setFloat("dot_scale", dot_scale);
+        dotShader.setFloat("x_scale", X_SCALE);
         
         // draw dots
         dotShader.use();
