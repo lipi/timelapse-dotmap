@@ -137,7 +137,7 @@ int main()
     while (!glfwWindowShouldClose(window))
     {
         void* ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-        spdlog::info("Replay speed: {}", replay.GetSpeed());
+        spdlog::debug("Replay speed: {}", replay.GetSpeed());
         for (int i = 0; i < replay.GetSpeed(); i++) {
             unsigned int timestamp = timestamps[frameIndex];
             spdlog::debug("Loading frame {} at {}", frameIndex, timestamp);
@@ -260,4 +260,5 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(yoffset);
+    spdlog::info("scroll: {} {}", xoffset, yoffset);
 }
