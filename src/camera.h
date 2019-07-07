@@ -14,9 +14,7 @@ enum Camera_Movement {
     LEFT,
     RIGHT,
     UP,
-    DOWN,
-    SLOW,
-    FAST
+    DOWN
 };
 
 // Default camera values
@@ -25,7 +23,7 @@ const float PITCH       =  0.0f;
 const float SPEED       =  2.5f;
 const float SENSITIVITY =  0.1f;
 const float ZOOM        =  45.0f;
-const float REPLAY      =  5.0f;
+
 
 
 // An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
@@ -45,10 +43,16 @@ public:
     float MovementSpeed;
     float MouseSensitivity;
     float Zoom;
-    float ReplaySpeed;
+
 
     // Constructor with vectors
-  Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM), ReplaySpeed(REPLAY)
+  Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
+          glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
+          float yaw = YAW, float pitch = PITCH) :
+          Front(glm::vec3(0.0f, 0.0f, -1.0f)),
+          MovementSpeed(SPEED),
+          MouseSensitivity(SENSITIVITY),
+          Zoom(ZOOM)
     {
         Position = position;
         WorldUp = up;
@@ -57,7 +61,11 @@ public:
         updateCameraVectors();
     }
     // Constructor with scalar values
-  Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM), ReplaySpeed(REPLAY)
+  Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) :
+          Front(glm::vec3(0.0f, 0.0f, -1.0f)),
+          MovementSpeed(SPEED),
+          MouseSensitivity(SENSITIVITY),
+          Zoom(ZOOM)
     {
         Position = glm::vec3(posX, posY, posZ);
         WorldUp = glm::vec3(upX, upY, upZ);
@@ -89,16 +97,6 @@ public:
         if (direction == DOWN)
             Position -= Up * velocity;
 
-        if (direction == SLOW) {
-            ReplaySpeed /= 1.01;
-        }
-        if (direction == FAST) {
-            ReplaySpeed *= 1.01;
-        }
-
-        if (ReplaySpeed < 1.0) {
-            ReplaySpeed = 1.0;
-        }
         if (Position.z < 0.11) {
             Position.z = 0.11;
         }

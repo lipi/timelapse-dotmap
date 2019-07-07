@@ -1,0 +1,11 @@
+
+* full screen
+* change dot size with keypress
+* zoom with mouse
+* speed-up with right mouse button
+* slow down with left mouse button
+* middle button and mouse: time slider
+* date and time display
+* replay rate display
+* FPS display
+* time slider

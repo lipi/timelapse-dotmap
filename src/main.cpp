@@ -16,6 +16,8 @@
 
 #include "frame.h"
 #include "camera.h"
+#include "replay.h"
+#include "render.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -23,12 +25,14 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 
 // settings
-const unsigned int SCR_WIDTH = 1280;
-const unsigned int SCR_HEIGHT = 720;
-const float X_SCALE = 0.7f;
+const unsigned int SCR_WIDTH = 640;
+const unsigned int SCR_HEIGHT = 480;
+
+ReplayParam replay;
+RenderParam render;
 
 // camera
-Camera camera(glm::vec3(174.0f * X_SCALE, -40, 10.0f));
+Camera camera(glm::vec3(174.0f * render.GetXScale(), -40, 10.0f));
 float lastX = (float)SCR_WIDTH / 2.0;
 float lastY = (float)SCR_HEIGHT / 2.0;
 bool firstMouse = true;
@@ -132,17 +136,13 @@ int main()
     // -----------
     while (!glfwWindowShouldClose(window))
     {
-        bool clear = false;
         void* ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-        spdlog::info("Replay speed: {}", camera.ReplaySpeed);
-        for (int i = 0; i < camera.ReplaySpeed; i++) {
+        spdlog::info("Replay speed: {}", replay.GetSpeed());
+        for (int i = 0; i < replay.GetSpeed(); i++) {
             unsigned int timestamp = timestamps[frameIndex];
             spdlog::debug("Loading frame {} at {}", frameIndex, timestamp);
             frameIndex++;
             frameIndex %= timestamps.size();
-            if (clear) {
-                bzero(ptr, amount * sizeof(glm::vec2));
-            }
             size_t size = frameProvider.GetDelta(timestamp, (glm::vec2*)ptr, amount);
             spdlog::debug("Loaded {} locations from frame {}", size, timestamp);
         }
@@ -166,12 +166,13 @@ int main()
         // configure transformation matrices
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        float dot_scale = camera.Position.z / 200.0f;
+        render.UpdateDotScale(camera.Position.z);
+
         dotShader.use();
         dotShader.setMat4("projection", projection);
         dotShader.setMat4("view", view);
-        dotShader.setFloat("dot_scale", dot_scale);
-        dotShader.setFloat("x_scale", X_SCALE);
+        dotShader.setFloat("dot_scale", render.GetDotScale());
+        dotShader.setFloat("x_scale", render.GetXScale());
         
         // draw dots
         dotShader.use();
@@ -197,8 +198,7 @@ int main()
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window)
-{
+void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
@@ -215,9 +215,9 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.ProcessKeyboard(UP, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
-        camera.ProcessKeyboard(SLOW, deltaTime);
+        replay.ChangeSpeed(-deltaTime);
     if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
-        camera.ProcessKeyboard(FAST, deltaTime);
+        replay.ChangeSpeed(deltaTime);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
