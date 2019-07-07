@@ -13,9 +13,11 @@ public:
     float GetXScale() const;
 
     void UpdateDotScale(float z);
+    void UpdateDotSize(float ratio);
 
 private:
     float m_DotScale;
+    float m_DotSize;
     float m_XScale;
 };
 
