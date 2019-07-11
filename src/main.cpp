@@ -14,10 +14,10 @@
 
 #include <iostream>
 
-#include "frame.h"
 #include "camera.h"
 #include "replay.h"
 #include "render.h"
+#include "interpolator.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -43,10 +43,8 @@ float lastFrame = 0.0f;
 
 int main()
 {
-    spdlog::set_level(spdlog::level::info);
+    spdlog::set_level(spdlog::level::debug);
     
-    // glfw: initialize and configure
-    // ------------------------------
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -56,8 +54,6 @@ int main()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // uncomment this statement to fix compilation on OS X
 #endif
 
-    // glfw window creation
-    // --------------------
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "TLDM", NULL, NULL);
     if (window == NULL)
     {
@@ -81,44 +77,22 @@ int main()
         return -1;
     }
 
-    // configure global opengl state
-    // -----------------------------
-    // blend
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);  
 
-    // build and compile shaders
-    // -------------------------
     Shader dotShader("dots.vs", "dots.fs");
-
-    // load models
-    // -----------
     Model dot(FileSystem::getPath("resources/dot/dot.obj"));
 
-    // generate a large list of semi-random model transformation matrices
-    // ------------------------------------------------------------------
-    unsigned int amount = 70000; // TODO: dynamic allocation
-    glm::vec2* positionVectors;
-    positionVectors = new glm::vec2[amount];
+    Interpolator interpolator("frames.db", 30);
 
-    Frame frameProvider("frames.db");
-    std::vector<uint32_t> timestamps = frameProvider.GetTimestamps();
-    uint32_t frameIndex = 0;
-    spdlog::info("Loading keyframe {} at {}", frameIndex, timestamps[frameIndex]);
-    size_t size = frameProvider.GetSnapshot(timestamps[0], &positionVectors[0], amount);
-    spdlog::info("Loaded {} locations from keyframe {}", size, timestamps[0] );
-    
     // configure instanced array
-    // -------------------------
     unsigned int buffer;
     glGenBuffers(1, &buffer);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, amount * sizeof(glm::vec2), &positionVectors[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, interpolator.GetSnapshotSize() * sizeof(glm::vec2),
+            interpolator.GetSnapshot(), GL_STATIC_DRAW);
 
     // set transformation matrices as an instance vertex attribute (with divisor 1)
-    // note: we're cheating a little by taking the, now publicly declared, VAO of the model's mesh(es) and adding new vertexAttribPointers
-    // normally you'd want to do this in a more organized fashion, but for learning purposes this will do.
-    // -----------------------------------------------------------------------------------------------------------------------------------
     for (unsigned int i = 0; i < dot.meshes.size(); i++)
     {
         unsigned int VAO = dot.meshes[i].VAO;
@@ -137,15 +111,7 @@ int main()
     while (!glfwWindowShouldClose(window))
     {
         void* ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-        spdlog::debug("Replay speed: {}", replay.GetSpeed());
-        for (int i = 0; i < replay.GetSpeed(); i++) {
-            unsigned int timestamp = timestamps[frameIndex];
-            spdlog::debug("Loading frame {} at {}", frameIndex, timestamp);
-            frameIndex++;
-            frameIndex %= timestamps.size();
-            size_t size = frameProvider.GetDelta(timestamp, (glm::vec2*)ptr, amount);
-            spdlog::debug("Loaded {} locations from frame {}", size, timestamp);
-        }
+        interpolator.FillNextFrame((glm::vec2*)ptr, replay.GetSpeed());
         glUnmapBuffer(GL_ARRAY_BUFFER);
 
         // per-frame time logic
@@ -182,7 +148,8 @@ int main()
         for (unsigned int i = 0; i < dot.meshes.size(); i++)
         {
             glBindVertexArray(dot.meshes[i].VAO);
-            glDrawElementsInstanced(GL_TRIANGLES, dot.meshes[i].indices.size(), GL_UNSIGNED_INT, 0, amount);
+            glDrawElementsInstanced(GL_TRIANGLES, dot.meshes[i].indices.size(),
+                    GL_UNSIGNED_INT, 0, interpolator.GetSnapshotSize());
             glBindVertexArray(0);
         }
 

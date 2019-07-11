@@ -1,6 +1,3 @@
-//
-// Created by Andras Lipoth on 2019-07-07.
-//
 
 #ifndef TIMELAPSEDOTMAP_REPLAY_H
 #define TIMELAPSEDOTMAP_REPLAY_H

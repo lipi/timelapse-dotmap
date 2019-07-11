@@ -85,7 +85,7 @@ file(GLOB SOURCE
         "src/*.fs"
         )
 set(NAME "tldm")
-add_executable(${NAME} ${SOURCE} src/replay.cpp src/replay.h src/render.cpp src/render.h)
+add_executable(${NAME} ${SOURCE} src/replay.cpp src/replay.h src/render.cpp src/render.h src/interpolator.cpp src/interpolator.h src/update.h)
 target_link_libraries(${NAME} ${LIBS})
 if(WIN32)
     set_target_properties(${NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")

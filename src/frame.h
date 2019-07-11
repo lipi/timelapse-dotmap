@@ -6,7 +6,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <SQLiteCpp/SQLiteCpp.h>
 
-class Frame  {
+#include "update.h"
+
+class FrameProvider  {
     
     private:
         SQLite::Database m_Db;
@@ -15,10 +17,10 @@ class Frame  {
         SQLite::Statement m_DeltaQuery;
         
     public:
-        Frame(const char* filename);
+        FrameProvider(const char* filename);
         std::vector<uint32_t> GetTimestamps();
         size_t GetSnapshot(uint32_t timestamp, glm::vec2* buffer, size_t size);
-        size_t GetDelta(uint32_t timestamp, glm::vec2* buffer, size_t size);
+        size_t FillDelta(uint32_t timestamp, glm::vec2 *buffer, size_t numLocations);
 };
 
 #endif // __FRAME_H__
