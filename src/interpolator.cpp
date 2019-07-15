@@ -1,58 +1,73 @@
 
 #include <spdlog/spdlog.h>
 
+#include "queue.h"
 #include "interpolator.h"
 
-static const size_t FRAME_SIZE = 70000; // TODO: dynamic size based on DB
 
-Interpolator::Interpolator(const char* filename, size_t frames) :
-    m_FrameSize(FRAME_SIZE),
-    m_Frames(),
-    m_FrameIndex(0) {
+// do not interpolate if jump is more than this
+static constexpr const float MAX_DISTANCE_DEGREE = 0.01f;
 
-    m_FrameProvider.reset(new FrameProvider("frames.db"));
-    m_SnapshotBuffer = new glm::vec2[m_FrameSize]; // TODO: smart ptr
-    spdlog::debug("snapshot buffer at {}", (void*)m_SnapshotBuffer);
-    m_Timestamps = m_FrameProvider->GetTimestamps();
-    uint32_t frameIndex = 0;
-    spdlog::info("Loading snapshot {} at {}", frameIndex, m_Timestamps[frameIndex]);
-    size_t size = m_FrameProvider->GetSnapshot(m_Timestamps[0], m_SnapshotBuffer, m_FrameSize);
-    spdlog::info("Loaded {} locations from snapshot {}", size, m_Timestamps[0] );
+Interpolator::Interpolator(FrameQueue& queue) :
+        m_Q(queue),
+        m_FrameSize(queue.GetFrameSize())
+{
+}
 
-    for (size_t i = 0; i < frames; i++) {
-        auto* pFrame = new glm::vec2[m_FrameSize]; // TODO: smart ptr
-        m_Frames.push_back(pFrame);
+uint Interpolator::FindChangeIndex(uint pointIndex) {
+    glm::vec2 point = m_Q.PreviousFrame()[pointIndex];
+
+    // find earliest frame index where the point's value was the same
+    for (int i = m_Q.Size() - 2; i > 0; i--) {
+        glm::vec2* frame = m_Q.m_Frames[i];
+        if (frame[pointIndex].x != point.x ||
+            frame[pointIndex].y != point.y){
+            return i + 1;
+        }
     }
+    return 0;
 }
 
-Interpolator::~Interpolator() {
-    for (auto pFrame : m_Frames) {
-        if (pFrame) { delete pFrame; }
+void Interpolator::Interpolate() {
+
+    // collect some stats
+    uint pointCounter = 0;
+    uint stepCounter = 0;
+    uint maxRange = 0;
+
+    // check each point: has it changed since previous?
+    for (uint i = 0; i < m_FrameSize; i++) {
+        if (m_Q.LastFrame()[i].x != m_Q.PreviousFrame()[i].x ||
+            m_Q.LastFrame()[i].y != m_Q.PreviousFrame()[i].y) {
+
+            pointCounter++;
+
+            // find the range to interpolate over
+            uint changeIndex = FindChangeIndex(i);
+            glm::vec2 start = m_Q.m_Frames[changeIndex][i];
+            glm::vec2 end = m_Q.LastFrame()[i];
+
+            // calculate delta per step for interpolation
+            uint range = m_Q.Size() - 1 - changeIndex;
+            if (range > maxRange) {maxRange = range;}
+            glm::vec2 delta = end - start;
+            if ((delta.x * delta.x + delta.y * delta.y) >
+                MAX_DISTANCE_DEGREE * MAX_DISTANCE_DEGREE) {
+                // do not interpolate if delta is more than ~1km
+                continue;
+            }
+
+            // delta.x = (end.x - start.x) / float(range);
+            // delta.y = (end.y - start.y) / float(range);
+            delta /= float(range);
+
+            // interpolate from change
+            for (uint j = changeIndex + 1, n = 1; j < m_Q.Size() - 2; j++, n++) {
+                m_Q.m_Frames[j][i] += (delta * float(n));
+                stepCounter++;
+            }
+        }
     }
-    m_Frames.clear();
-    delete m_SnapshotBuffer;
-}
-
-glm::vec2* Interpolator::GetSnapshot() {
-    return m_SnapshotBuffer;
-}
-
-size_t Interpolator::GetSnapshotSize() {
-    return m_FrameSize;
-}
-
-size_t Interpolator::GetSnapshotSizeBytes() {
-    return m_FrameSize * sizeof(glm::vec2);
-}
-
-void Interpolator::FillNextFrame(glm::vec2* pFrame, size_t step) {
-
-    for (int i = 0; i < step; i++) {
-        unsigned int timestamp = m_Timestamps[m_FrameIndex];
-        spdlog::debug("Loading frame {} at {} {}", m_FrameIndex, timestamp, (void*)pFrame);
-        size_t size = m_FrameProvider->FillDelta(timestamp, pFrame, m_FrameSize);
-        m_FrameIndex++;
-        m_FrameIndex %= m_Timestamps.size();
-        spdlog::debug("Loaded {} locations from frame {}", size, timestamp);
-    }
+    spdlog::debug("Interpolated {} points in {} steps, avg range {:.4f} max range {}",
+            pointCounter, stepCounter, float(stepCounter)/float(pointCounter), maxRange);
 }

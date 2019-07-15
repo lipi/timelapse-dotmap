@@ -17,6 +17,8 @@
 #include "camera.h"
 #include "replay.h"
 #include "render.h"
+#include "frame.h"
+#include "queue.h"
 #include "interpolator.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -82,15 +84,16 @@ int main()
 
     Shader dotShader("dots.vs", "dots.fs");
     Model dot(FileSystem::getPath("resources/dot/dot.obj"));
-
-    Interpolator interpolator("frames.db", 30);
+    FrameProvider frameProvider("frames.db");
+    FrameQueue frameQueue(frameProvider, 120);
+    Interpolator interpolator(frameQueue);
 
     // configure instanced array
     unsigned int buffer;
     glGenBuffers(1, &buffer);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, interpolator.GetSnapshotSize() * sizeof(glm::vec2),
-            interpolator.GetSnapshot(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, frameQueue.GetFrameSizeBytes(),
+            frameQueue.OldestFrame(), GL_STATIC_DRAW);
 
     // set transformation matrices as an instance vertex attribute (with divisor 1)
     for (unsigned int i = 0; i < dot.meshes.size(); i++)
@@ -99,7 +102,7 @@ int main()
         glBindVertexArray(VAO);
         // set attribute pointers for vec2
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (void*)0);
+        glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), nullptr);
 
         glVertexAttribDivisor(3, 1);
 
@@ -110,8 +113,11 @@ int main()
     // -----------
     while (!glfwWindowShouldClose(window))
     {
+
+        frameProvider.Next(frameQueue.LastFrame());
+        interpolator.Interpolate();
         void* ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-        interpolator.FillNextFrame((glm::vec2*)ptr, replay.GetSpeed());
+        frameQueue.Pop((glm::vec2*)ptr);
         glUnmapBuffer(GL_ARRAY_BUFFER);
 
         // per-frame time logic
@@ -149,7 +155,7 @@ int main()
         {
             glBindVertexArray(dot.meshes[i].VAO);
             glDrawElementsInstanced(GL_TRIANGLES, dot.meshes[i].indices.size(),
-                    GL_UNSIGNED_INT, 0, interpolator.GetSnapshotSize());
+                    GL_UNSIGNED_INT, 0, frameQueue.GetFrameSize());
             glBindVertexArray(0);
         }
 

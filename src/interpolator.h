@@ -12,21 +12,15 @@
 class Interpolator {
 
 public:
-    Interpolator(const char* filename, size_t frames);
+    Interpolator(FrameQueue& frameQueue);
 
-    glm::vec2* GetSnapshot();
-    size_t GetSnapshotSize();
-    size_t GetSnapshotSizeBytes();
-    void FillNextFrame(glm::vec2* pFrame, size_t size);
-
-    virtual ~Interpolator();
+    void Interpolate();
 
 private:
-    std::unique_ptr<FrameProvider> m_FrameProvider;
-    glm::vec2* m_SnapshotBuffer;
+
+    uint FindChangeIndex(uint pointIndex);
+
+    FrameQueue& m_Q;
     size_t m_FrameSize;
-    std::vector<glm::vec2*> m_Frames;
-    std::vector<uint32_t> m_Timestamps;
-    unsigned int m_FrameIndex;
 };
 #endif //TIMELAPSEDOTMAP_INTERPOLATOR_H

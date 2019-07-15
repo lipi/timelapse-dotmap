@@ -11,9 +11,18 @@ FrameProvider::FrameProvider(const char* filename)
       m_SnapshotQuery(m_Db, "SELECT frame FROM snapshot WHERE timestamp <= :timestamp ORDER BY timestamp DESC limit 1"),
       m_DeltaQuery(m_Db, "SELECT frame FROM delta WHERE timestamp = :timestamp")
 {
+    m_FrameSize = 70000; // TODO: read it from DB
+    m_Timestamps = GetTimestamps();
     spdlog::info("Opened {}, found {} frames", filename, (uint32_t)GetTimestamps().size());
 }
 
+size_t FrameProvider::GetFrameSize() {
+    return m_FrameSize;
+}
+
+size_t FrameProvider::GetFrameSizeBytes() {
+    return m_FrameSize * sizeof(glm::vec2);
+}
 std::vector<uint32_t> FrameProvider::GetTimestamps() {
     std::vector<uint32_t> timestamps;
     
@@ -51,7 +60,7 @@ size_t FrameProvider::GetSnapshot(uint32_t timestamp, glm::vec2* buffer, size_t 
     return numLocations;
 }
 
-size_t FrameProvider::FillDelta(uint32_t timestamp, glm::vec2 *buffer, size_t numLocations) {
+size_t FrameProvider::FillDelta(uint32_t timestamp, glm::vec2 *frame, size_t numLocations) {
     const void* blobData = NULL;
     size_t blobSize;
     size_t locationSize = sizeof(update_t);
@@ -69,11 +78,20 @@ size_t FrameProvider::FillDelta(uint32_t timestamp, glm::vec2 *buffer, size_t nu
         spdlog::debug("converting {} floats ({} locations)", 2 * numLocations, numLocations);
         for (size_t i = 0; i < numLocations; i++) {
             uint32_t index = items[i].index;
-            buffer[index] = glm::vec2(items[i].lon, items[i].lat);
+            frame[index] = glm::vec2(items[i].lon, items[i].lat);
         }
     }
     m_DeltaQuery.clearBindings();
     m_DeltaQuery.reset();
 
     return numLocations;
+}
+
+void FrameProvider::Next(glm::vec2* frame) {
+    uint timestamp = m_Timestamps[m_TimeIndex];
+    spdlog::debug("Loading frame {} at {} {}",
+                  m_TimeIndex, timestamp, (void*)frame);
+    FillDelta(timestamp, frame, m_FrameSize);
+    m_TimeIndex++;
+    m_TimeIndex %= m_Timestamps.size();
 }

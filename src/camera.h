@@ -21,7 +21,7 @@ enum Camera_Movement {
 const float YAW         = -90.0f;
 const float PITCH       =  0.0f;
 const float SPEED       =  2.5f;
-const float SENSITIVITY =  0.1f;
+const float SENSITIVITY =  0.001f;
 
 // An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
 class Camera
@@ -69,13 +69,13 @@ public:
         if (direction == BACKWARD)
             Position -= Front * velocity;
         if (direction == LEFT)
-            Position -= Right * velocity;
-        if (direction == RIGHT)
             Position += Right * velocity;
+        if (direction == RIGHT)
+            Position -= Right * velocity;
         if (direction == UP)
-            Position += Up * velocity;
-        if (direction == DOWN)
             Position -= Up * velocity;
+        if (direction == DOWN)
+            Position += Up * velocity;
 
         if (Position.z < 0.11) {
             Position.z = 0.11;
@@ -85,11 +85,11 @@ public:
     // Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
     void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
     {
-        xoffset *= MouseSensitivity / 20.0;
-        yoffset *= MouseSensitivity / 20.0;
+        xoffset *= MouseSensitivity;
+        yoffset *= MouseSensitivity;
 
-        Position += Right * xoffset * Position.z;
-        Position += Up * yoffset * Position.z;
+        Position -= Right * xoffset * Position.z;
+        Position -= Up * yoffset * Position.z;
 
         // Update Front, Right and Up Vectors using the updated Euler angles
         updateCameraVectors();
@@ -98,7 +98,7 @@ public:
     // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     void ProcessMouseScroll(float yoffset)
     {
-        float velocity = MovementSpeed * yoffset * Position.z / 25.0;
+        float velocity = MovementSpeed * yoffset * Position.z / 100.0f;
         Position += Front * velocity;
     }
 
