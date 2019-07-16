@@ -1,8 +1,8 @@
 
 #include "render.h"
 
-const float X_SCALE = 0.7f;
-const float DOT_SIZE = 1 / 200.f;
+static const float X_SCALE = 0.7f;
+static const float DOT_SIZE = 1 / 200.f;
 
 RenderParam::RenderParam() :
         m_DotSize(DOT_SIZE),

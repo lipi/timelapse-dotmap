@@ -144,6 +144,7 @@ int main()
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
         glm::mat4 view = camera.GetViewMatrix();
         render.UpdateDotScale(camera.Position.z);
+        //spdlog::debug("z: {}", camera.Position.z);
 
         dotShader.use();
         dotShader.setMat4("projection", projection);
@@ -160,7 +161,7 @@ int main()
         {
             glBindVertexArray(dot.meshes[i].VAO);
             glDrawElementsInstanced(GL_TRIANGLES, dot.meshes[i].indices.size(),
-                    GL_UNSIGNED_INT, 0, frameQueue.GetFrameSize());
+                    GL_UNSIGNED_INT, nullptr, frameQueue.GetFrameSize());
             glBindVertexArray(0);
         }
 
@@ -238,5 +239,5 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(yoffset);
-    spdlog::info("scroll: {} {}", xoffset, yoffset);
+    //spdlog::info("scroll: {} {}", xoffset, yoffset);
 }
