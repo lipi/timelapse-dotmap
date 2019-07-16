@@ -62,7 +62,7 @@ void Interpolator::Interpolate() {
             delta /= float(range);
 
             // interpolate from change
-            for (uint j = changeIndex + 1, n = 1; j < m_Q.Size() - 2; j++, n++) {
+            for (uint j = changeIndex + 1, n = 1; j < m_Q.Size() - 1; j++, n++) {
                 m_Q.m_Frames[j][i] += (delta * float(n));
                 stepCounter++;
             }

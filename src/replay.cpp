@@ -1,7 +1,7 @@
 
 #include "replay.h"
 
-const float SPEED = 5.0f;
+const float SPEED = 1.0f;
 
 ReplayParam::ReplayParam() :
         m_Speed(SPEED)

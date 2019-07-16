@@ -113,8 +113,9 @@ int main()
     // -----------
     while (!glfwWindowShouldClose(window))
     {
-
-        frameProvider.Next(frameQueue.LastFrame());
+        for (uint i = 0; i < replay.GetSpeed(); i++) {
+            frameProvider.Next(frameQueue.LastFrame());
+        }
         interpolator.Interpolate();
         void* ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
         frameQueue.Pop((glm::vec2*)ptr);
