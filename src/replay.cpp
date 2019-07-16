@@ -10,7 +10,6 @@ ReplayParam::ReplayParam() :
 
 void ReplayParam::ChangeSpeed(float increase) {
     m_Speed *= 1.0f + increase;
-    if (m_Speed < 1.0f) {m_Speed = 1.0f;}
 }
 
 float ReplayParam::GetSpeed() {

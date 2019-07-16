@@ -113,7 +113,11 @@ int main()
     // -----------
     while (!glfwWindowShouldClose(window))
     {
-        for (uint i = 0; i < replay.GetSpeed(); i++) {
+        static float phase = 0.0f;
+        spdlog::debug("speed: {}", replay.GetSpeed());
+        phase += replay.GetSpeed();
+        while (phase >= 1.0f) {
+            phase -= 1.0f;
             frameProvider.Next(frameQueue.LastFrame());
         }
         interpolator.Interpolate();
