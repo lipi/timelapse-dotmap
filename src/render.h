@@ -14,8 +14,8 @@ public:
     void UpdateDotSize(float ratio);
 
 private:
-    float m_DotScale;
     float m_DotSize;
+    float m_DotScale;
     float m_XScale;
 };
 
