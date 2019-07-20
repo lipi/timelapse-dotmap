@@ -1,9 +1,9 @@
 [submodule "external/LearnOpenGL"]
 	path = external/LearnOpenGL
-	url = git@github.com:JoeyDeVries/LearnOpenGL.git
+	url = https://github.com/JoeyDeVries/LearnOpenGL.git
 [submodule "external/SQLiteCpp"]
 	path = external/SQLiteCpp
-	url = git@github.com:SRombauts/SQLiteCpp.git
+	url = https://github.com/SRombauts/SQLiteCpp.git
 [submodule "external/spdlog"]
 	path = external/spdlog
-	url = git@github.com:gabime/spdlog.git
+	url = https://github.com/gabime/spdlog.git
