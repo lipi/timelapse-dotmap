@@ -43,9 +43,14 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-int main()
+int main(int argc, char* argv[])
 {
-    spdlog::set_level(spdlog::level::debug);
+    if (argc < 2 ){
+        fprintf(stderr, "Usage:   %s <filename>\n", argv[0]);
+        fprintf(stderr, "Example: %s frames.db\n", argv[0]);
+        exit(1);
+    }
+    spdlog::set_level(spdlog::level::info);
     
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -84,7 +89,7 @@ int main()
 
     Shader dotShader("dots.vs", "dots.fs");
     Model dot(FileSystem::getPath("resources/dot/dot.obj"));
-    FrameProvider frameProvider("frames.db");
+    FrameProvider frameProvider(argv[1]);
     FrameQueue frameQueue(frameProvider, 120);
     Interpolator interpolator(frameQueue);
 
@@ -114,7 +119,7 @@ int main()
     while (!glfwWindowShouldClose(window))
     {
         static float phase = 0.0f;
-        spdlog::debug("speed: {}", replay.GetSpeed());
+        spdlog::info("speed: {}", replay.GetSpeed());
         phase += replay.GetSpeed();
         while (phase >= 1.0f) {
             phase -= 1.0f;

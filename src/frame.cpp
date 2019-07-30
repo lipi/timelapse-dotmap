@@ -13,6 +13,7 @@ FrameProvider::FrameProvider(const char* filename)
       m_DeltaQuery(m_Db, "SELECT frame FROM delta WHERE timestamp = :timestamp")
 {
     m_FrameSize = 70000; // TODO: read it from DB
+    spdlog::info("Opening {}...", filename);
     m_Timestamps = GetTimestamps();
     spdlog::info("Opened {}, found {} frames", filename, (uint32_t)GetTimestamps().size());
 }
