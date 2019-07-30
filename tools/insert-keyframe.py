@@ -33,7 +33,7 @@ if __name__ == '__main__':
             
             data = f.read()
             print('basename: {} timestamp: {} data size:{}'.format(basename, ts, len(data)))
-            sql = 'REPLACE INTO keyframe (timestamp, frame) VALUES (?, ?)'
+            sql = 'REPLACE INTO snapshot (timestamp, frame) VALUES (?, ?)'
             cursor.execute(sql, (ts, sqlite3.Binary(data)))
             conn.commit()
 

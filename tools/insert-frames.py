@@ -2,7 +2,7 @@
 #
 # Insert frame data into DB
 #
-# Keyframe timestamp is deducted from filename
+# Frame timestamp is deducted from filename
 #
 
 import sys
@@ -14,7 +14,7 @@ def insert_frame(conn, cursor, timestamp, frame):
     sql = 'REPLACE INTO delta (timestamp, frame) VALUES (?, ?)'
     cursor.execute(sql, (timestamp, sqlite3.Binary(frame)))
     conn.commit()
-    print('Written {} bytes ({} slots) into database at {}'.format(len(frame), len(frame) / 12, timestamp))
+#    print('Written {} bytes ({} slots) into database at {}'.format(len(frame), len(frame) / 12, timestamp))
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
@@ -48,9 +48,12 @@ if __name__ == '__main__':
                     timestamp = ts
                     frame = bytes()
 
-                slot = master[eid]
-                bin = s.pack(int(slot),float(lat),float(lon))
-                frame += bin
+                try:
+                    slot = master[eid]
+                except KeyError:
+                    print('Unknown ID {}'.format(eid))
+                binary = s.pack(int(slot),float(lat),float(lon))
+                frame += binary
 
             insert_frame(conn, cursor, ts, frame)
 

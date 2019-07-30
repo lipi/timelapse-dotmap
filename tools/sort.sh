@@ -10,4 +10,4 @@
 
 export LC_ALL=C
 
-time nice gsort --parallel=8 -t "," -k 1 $1 > $2
+time nice sort --parallel=8 -t "," -k 1 $1 > $2
