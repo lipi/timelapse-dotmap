@@ -12,7 +12,8 @@ FrameQueue::FrameQueue(FrameProvider& frameProvider, size_t queueSize) :
     for (size_t i = 0; i < queueSize; i++) {
         auto *pFrame = new glm::vec2[m_FrameSize]; // TODO: smart ptr
         m_Frames.push_back(pFrame);
-        m_FrameProvider.GetSnapshot(1556625600, pFrame, GetFrameSize());
+        uint32_t oldestTimestamp = m_FrameProvider.GetTimestamps()[0];
+        m_FrameProvider.GetSnapshot(oldestTimestamp, pFrame, GetFrameSize());
     }
     spdlog::info("Frame queue has been initialised");
 }
