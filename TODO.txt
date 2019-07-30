@@ -1,10 +1,39 @@
 
+DONE:
+
 * full screen
 * change dot size with keypress
 * zoom with mouse
+
+MUST HAVE:
+
+* re-load first snapshot at beginning of every timestamp loop
+
+* key to store values to INI (disabled in production)
+* key to reset settings to default (read from INI)
+
+* INI file to store:
+  * start x,y,z
+  * maximum x,y,z
+  * start speed
+  * start dotsize
+  * min/max speed
+  * min/max dotsize
+  * mouse sensitivity (pan, zoom)
+  * DB filename
+
+SHOULD HAVE:
+
 * speed-up with right mouse button
 * slow down with left mouse button
+
+WOULD HAVE:
+
 * middle button and mouse: time slider
+
+COULD HAVE:
+
+* country border
 * date and time display
 * replay rate display
 * FPS display
