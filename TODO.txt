@@ -7,10 +7,11 @@ DONE:
 
 MUST HAVE:
 
+* center at median of points (or INI)
 * re-load first snapshot at beginning of every timestamp loop
 
 * key to store values to INI (disabled in production)
-* key to reset settings to default (read from INI)
+* key to reset settings to default (re-read from INI)
 
 * INI file to store:
   * start x,y,z

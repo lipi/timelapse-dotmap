@@ -14,6 +14,8 @@
 
 #include <iostream>
 
+#include <INIReader.h>
+
 #include "camera.h"
 #include "replay.h"
 #include "render.h"
@@ -32,6 +34,7 @@ const unsigned int SCR_HEIGHT = 540;
 
 ReplayParam replay;
 RenderParam render;
+INIReader config;
 
 // camera
 Camera camera(glm::vec3(174.0f * render.GetXScale(), -40, 10.0f));
@@ -43,13 +46,37 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+string dbFilename;
+
+INIReader readIni(char *filename) {
+    INIReader reader(filename);
+
+    dbFilename = reader.Get("database", "filename", "frames.fb");
+
+    camera.Position = glm::vec3(reader.GetReal("camera", "x", 174.0f) * render.GetXScale(),
+                                reader.GetReal("camera", "y", -40.0f),
+                                reader.GetReal("camera", "z", 10.0f));
+
+    camera.Minimum = glm::vec3(reader.GetReal("camera", "x_min", -180.0f) * render.GetXScale(),
+                                reader.GetReal("camera", "y_min", -90.0f),
+                                reader.GetReal("camera", "z_min", 0.11f));
+
+    camera.Maximum = glm::vec3(reader.GetReal("camera", "x_max", 180.0f) * render.GetXScale(),
+                                reader.GetReal("camera", "y_max", 90.0f),
+                                reader.GetReal("camera", "z_max", 20.0f));
+    
+    return reader;
+}
+
 int main(int argc, char* argv[])
 {
     if (argc < 2 ){
-        fprintf(stderr, "Usage:   %s <filename>\n", argv[0]);
-        fprintf(stderr, "Example: %s frames.db\n", argv[0]);
+        fprintf(stderr, "Usage:   %s <inifile>\n", argv[0]);
+        fprintf(stderr, "Example: %s config.ini\n", argv[0]);
         exit(1);
     }
+    config = readIni(argv[1]);
+    
     spdlog::set_level(spdlog::level::info);
     
     glfwInit();
@@ -88,8 +115,8 @@ int main(int argc, char* argv[])
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);  
 
     Shader dotShader("dots.vs", "dots.fs");
-    Model dot(FileSystem::getPath("resources/dot/dot.obj"));
-    FrameProvider frameProvider(argv[1]);
+    Model dot(FileSystem::getPath("resources/dot/dot.obj")); // FIXME: move resources during build
+    FrameProvider frameProvider(dbFilename.c_str());
     FrameQueue frameQueue(frameProvider, 120);
     Interpolator interpolator(frameQueue);
 
@@ -119,7 +146,8 @@ int main(int argc, char* argv[])
     while (!glfwWindowShouldClose(window))
     {
         static float phase = 0.0f;
-        spdlog::info("speed: {}", replay.GetSpeed());
+        printf("speed: %.2f x:%.3f y:%.3f z:%.3f\r",
+               replay.GetSpeed(), camera.Position.x / render.GetXScale(), camera.Position.y, camera.Position.z); 
         phase += replay.GetSpeed();
         while (phase >= 1.0f) {
             phase -= 1.0f;

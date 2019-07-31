@@ -122,4 +122,5 @@ include_directories(${CMAKE_SOURCE_DIR}/includes
         ${CMAKE_SOURCE_DIR}/external/LearnOpenGL/includes
         ${CMAKE_SOURCE_DIR}/external/SQLiteCpp/include
         ${CMAKE_SOURCE_DIR}/external/SQLiteCpp/sqlite3
-        ${CMAKE_SOURCE_DIR}/external/spdlog/include)
+        ${CMAKE_SOURCE_DIR}/external/spdlog/include
+        ${CMAKE_SOURCE_DIR}/external/inih)

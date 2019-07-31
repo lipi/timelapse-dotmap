@@ -29,6 +29,8 @@ class Camera
 public:
     // Camera Attributes
     glm::vec3 Position;
+    glm::vec3 Minimum;
+    glm::vec3 Maximum;
     glm::vec3 Front;
     glm::vec3 Up;
     glm::vec3 Right;
@@ -38,17 +40,21 @@ public:
     float Pitch;
     // Camera options
     float MovementSpeed;
+    float ScrollSpeed;
     float MouseSensitivity;
 
 
     // Constructor with vectors
   Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f)) :
           Position(position),
+          Minimum(-180.0f, -90.0f, 0.11f),
+          Maximum(180.0f, 90.0f, 20.0f),
           Front(glm::vec3(0.0f, 0.0f, -1.0f)),
           WorldUp(glm::vec3(0.0f, 1.0f, 0.0f)),
           Yaw(YAW),
           Pitch(PITCH),
           MovementSpeed(SPEED),
+          ScrollSpeed(SPEED),
           MouseSensitivity(SENSITIVITY)
     {
         updateCameraVectors();
@@ -77,9 +83,9 @@ public:
         if (direction == DOWN)
             Position += Up * velocity;
 
-        if (Position.z < 0.11) {
-            Position.z = 0.11;
-        }
+        Limit(Position.x, Minimum.x, Maximum.x);
+        Limit(Position.y, Minimum.y, Maximum.y);
+        Limit(Position.z, Minimum.z, Maximum.z);
     }
 
     // Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
@@ -91,6 +97,9 @@ public:
         Position -= Right * xoffset * Position.z;
         Position -= Up * yoffset * Position.z;
 
+        Limit(Position.x, Minimum.x, Maximum.x);
+        Limit(Position.y, Minimum.y, Maximum.y);
+        
         // Update Front, Right and Up Vectors using the updated Euler angles
         updateCameraVectors();
     }
@@ -98,11 +107,9 @@ public:
     // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     void ProcessMouseScroll(float yoffset)
     {
-        float velocity = MovementSpeed * yoffset * Position.z / 100.0f;
+        float velocity = ScrollSpeed * yoffset * Position.z / 100.0f;
         Position += Front * velocity;
-        if (Position.z < 0.11) {
-            Position.z = 0.11;
-        }
+        Limit(Position.z, Minimum.z, Maximum.z);
     }
 
 private:
@@ -118,6 +125,15 @@ private:
         // Also re-calculate the Right and Up vector
         Right = glm::normalize(glm::cross(Front, WorldUp));  // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
         Up    = glm::normalize(glm::cross(Right, Front));
+    }
+
+    void Limit(float& value, float& minimum, float& maximum) {
+        if (value < minimum) {
+            value = minimum;
+        }
+        if (value > maximum) {
+            value = maximum;
+        }
     }
 };
 #endif
