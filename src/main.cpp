@@ -46,6 +46,7 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+char* iniFilename;
 string dbFilename;
 
 INIReader readIni(char *filename) {
@@ -64,7 +65,11 @@ INIReader readIni(char *filename) {
     camera.Maximum = glm::vec3(reader.GetReal("camera", "x_max", 180.0f) * render.GetXScale(),
                                 reader.GetReal("camera", "y_max", 90.0f),
                                 reader.GetReal("camera", "z_max", 20.0f));
-    
+
+    replay = ReplayParam(reader.GetReal("replay", "speed", 1.0f),
+            reader.GetReal("replay", "speed_min", 0.1f),
+            reader.GetReal("replay", "speed_max", 120.0f));
+
     return reader;
 }
 
@@ -75,7 +80,8 @@ int main(int argc, char* argv[])
         fprintf(stderr, "Example: %s config.ini\n", argv[0]);
         exit(1);
     }
-    config = readIni(argv[1]);
+    iniFilename = argv[1];
+    config = readIni(iniFilename);
     
     spdlog::set_level(spdlog::level::info);
     
@@ -235,6 +241,10 @@ void processInput(GLFWwindow *window) {
         render.UpdateDotSize(1.0f - deltaTime);
     if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS)
         render.UpdateDotSize(1.0f + deltaTime);
+
+    if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS)
+        readIni(iniFilename);
+
 
 }
 
