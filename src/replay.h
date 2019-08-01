@@ -4,7 +4,7 @@
 
 class ReplayParam {
 public:
-    ReplayParam(float speed = 1.0, float minSpeed = 0.0f, float maxSpeed = 1000.f);
+    ReplayParam(float speed = 1.0, float minSpeed = 0.1f, float maxSpeed = 120.0f);
     float GetSpeed();
 
     void ChangeSpeed(float increase);

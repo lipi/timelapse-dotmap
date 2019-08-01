@@ -9,10 +9,10 @@ FrameQueue::FrameQueue(FrameProvider& frameProvider, size_t queueSize) :
 
     assert(queueSize > 1);
 
+    uint32_t oldestTimestamp = m_FrameProvider.GetTimestamps()[0];
     for (size_t i = 0; i < queueSize; i++) {
         auto *pFrame = new glm::vec2[m_FrameSize]; // TODO: smart ptr
         m_Frames.push_back(pFrame);
-        uint32_t oldestTimestamp = m_FrameProvider.GetTimestamps()[0];
         m_FrameProvider.GetSnapshot(oldestTimestamp, pFrame, GetFrameSize());
     }
     spdlog::info("Frame queue has been initialised");

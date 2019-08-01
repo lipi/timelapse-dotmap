@@ -5,8 +5,9 @@
 
 class RenderParam{
 public:
-    RenderParam();
+    RenderParam(float size = 0.005f, float minSize = 0.001f, float maxSize = 0.025f);
 
+    float GetDotSize() const;
     float GetDotScale() const;
     float GetXScale() const;
 
@@ -15,6 +16,8 @@ public:
 
 private:
     float m_DotSize;
+    float m_MinSize;
+    float m_MaxSize;
     float m_DotScale;
     float m_XScale;
 };

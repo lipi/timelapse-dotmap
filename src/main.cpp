@@ -59,16 +59,20 @@ INIReader readIni(char *filename) {
                                 reader.GetReal("camera", "z", 10.0f));
 
     camera.Minimum = glm::vec3(reader.GetReal("camera", "x_min", -180.0f) * render.GetXScale(),
-                                reader.GetReal("camera", "y_min", -90.0f),
-                                reader.GetReal("camera", "z_min", 0.11f));
+                               reader.GetReal("camera", "y_min", -90.0f),
+                               reader.GetReal("camera", "z_min", 0.11f));
 
     camera.Maximum = glm::vec3(reader.GetReal("camera", "x_max", 180.0f) * render.GetXScale(),
-                                reader.GetReal("camera", "y_max", 90.0f),
-                                reader.GetReal("camera", "z_max", 20.0f));
+                               reader.GetReal("camera", "y_max", 90.0f),
+                               reader.GetReal("camera", "z_max", 20.0f));
 
     replay = ReplayParam(reader.GetReal("replay", "speed", 1.0f),
-            reader.GetReal("replay", "speed_min", 0.1f),
-            reader.GetReal("replay", "speed_max", 120.0f));
+                         reader.GetReal("replay", "speed_min", 0.1f),
+                         reader.GetReal("replay", "speed_max", 120.0f));
+
+    render = RenderParam(reader.GetReal("render", "dotsize", 0.005f),
+                         reader.GetReal("render", "dotsize_min", 0.001f),
+                         reader.GetReal("render", "dotsize_max", 0.025f));
 
     return reader;
 }
@@ -80,10 +84,15 @@ int main(int argc, char* argv[])
         fprintf(stderr, "Example: %s config.ini\n", argv[0]);
         exit(1);
     }
+    spdlog::set_level(spdlog::level::info);
+
     iniFilename = argv[1];
     config = readIni(iniFilename);
-    
-    spdlog::set_level(spdlog::level::info);
+    FrameProvider frameProvider(dbFilename.c_str());
+    spdlog::info("Creating frame queue...");
+    FrameQueue frameQueue(frameProvider, 120);
+    Interpolator interpolator(frameQueue);
+    spdlog::info("Creating window...");
     
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -122,9 +131,6 @@ int main(int argc, char* argv[])
 
     Shader dotShader("dots.vs", "dots.fs");
     Model dot(FileSystem::getPath("resources/dot/dot.obj")); // FIXME: move resources during build
-    FrameProvider frameProvider(dbFilename.c_str());
-    FrameQueue frameQueue(frameProvider, 120);
-    Interpolator interpolator(frameQueue);
 
     // configure instanced array
     unsigned int buffer;
@@ -152,8 +158,9 @@ int main(int argc, char* argv[])
     while (!glfwWindowShouldClose(window))
     {
         static float phase = 0.0f;
-        printf("speed: %.2f x:%.3f y:%.3f z:%.3f\r",
-               replay.GetSpeed(), camera.Position.x / render.GetXScale(), camera.Position.y, camera.Position.z); 
+        printf("size: %.4f speed: %.2f x:%.3f y:%.3f z:%.3f\r",
+               render.GetDotSize(), replay.GetSpeed(),
+               camera.Position.x / render.GetXScale(), camera.Position.y, camera.Position.z); 
         phase += replay.GetSpeed();
         while (phase >= 1.0f) {
             phase -= 1.0f;
