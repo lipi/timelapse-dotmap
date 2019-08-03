@@ -47,7 +47,7 @@ public:
     // Constructor with vectors
   Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f)) :
           Position(position),
-          Minimum(-180.0f, -90.0f, 0.11f),
+          Minimum(-180.0f, -90.0f, 0.1f),
           Maximum(180.0f, 90.0f, 20.0f),
           Front(glm::vec3(0.0f, 0.0f, -1.0f)),
           WorldUp(glm::vec3(0.0f, 1.0f, 0.0f)),

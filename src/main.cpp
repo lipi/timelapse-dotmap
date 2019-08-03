@@ -28,18 +28,15 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 
-// settings
-const unsigned int SCR_WIDTH = 960;
-const unsigned int SCR_HEIGHT = 540;
-
+INIReader config;
 ReplayParam replay;
 RenderParam render;
-INIReader config;
+Camera camera;
 
-// camera
-Camera camera(glm::vec3(174.0f * render.GetXScale(), -40, 10.0f));
-float lastX = (float)SCR_WIDTH / 2.0;
-float lastY = (float)SCR_HEIGHT / 2.0;
+float screenWidth;
+float screenHeight;
+float lastX;
+float lastY;
 bool firstMouse = true;
 
 // timing
@@ -74,6 +71,12 @@ INIReader readIni(char *filename) {
                          reader.GetReal("render", "dotsize_min", 0.001f),
                          reader.GetReal("render", "dotsize_max", 0.025f));
 
+    screenWidth = reader.GetReal("window", "width", 960);
+    screenHeight = reader.GetReal("window", "height", 540);
+
+    lastX = screenWidth / 2;
+    lastY = screenHeight / 2;
+
     return reader;
 }
 
@@ -103,7 +106,7 @@ int main(int argc, char* argv[])
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // uncomment this statement to fix compilation on OS X
 #endif
 
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "TLDM", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "TLDM", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -127,7 +130,7 @@ int main(int argc, char* argv[])
     }
 
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);  
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
     Shader dotShader("dots.vs", "dots.fs");
     Model dot(FileSystem::getPath("resources/dot/dot.obj")); // FIXME: move resources during build
@@ -187,7 +190,7 @@ int main(int argc, char* argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // configure transformation matrices
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), screenWidth / screenHeight, 0.0001f, 1000.0f);
         glm::mat4 view = camera.GetViewMatrix();
         render.UpdateDotScale(camera.Position.z);
         //spdlog::debug("z: {}", camera.Position.z);
@@ -262,6 +265,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     // make sure the viewport matches the new window dimensions; note that width and 
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
+    screenWidth = width;
+    screenHeight = height;
 }
 
 // glfw: whenever the mouse moves, this callback is called

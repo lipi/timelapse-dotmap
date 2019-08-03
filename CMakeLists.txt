@@ -100,6 +100,8 @@ endif(WIN32)
 file(GLOB SHADERS
         "src/*.vs"
         "src/*.fs"
+        "src/*.ini"
+        "data/*.db"
         )
 foreach(SHADER ${SHADERS})
     if(WIN32)
