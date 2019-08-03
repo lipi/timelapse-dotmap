@@ -45,4 +45,8 @@ sqlite3 -line ../frames.db 'create table delta (timestamp integer primary key, f
 # insert deltas to DB (~4 min)
 time for f in ../days/*.sorted; do python3 ../../tools/insert-frames.py ../master.csv ../frames.db $f; done
 
+echo "Create separate table for timestamps..."
+sqlite3 -line ../frames.db 'create table timestamps (timestamp integer primary key);'
+sqlite3 -line ../frames.db 'insert into timestamps select timestamp from delta where timestamp > 0 order by timestamp asc;'
+
 echo "Done."

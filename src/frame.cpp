@@ -8,8 +8,8 @@
 FrameProvider::FrameProvider(const char* filename)
     : m_TimeIndex(0),
       m_Db(filename),
-      m_TimestampsQuery(m_Db, "SELECT timestamp FROM delta WHERE timestamp > 0"),
-      m_SnapshotQuery(m_Db, "SELECT frame FROM snapshot WHERE timestamp <= :timestamp ORDER BY timestamp DESC limit 1"),
+      m_TimestampsQuery(m_Db, "SELECT timestamp FROM timestamps WHERE timestamp > 0"),
+      m_SnapshotQuery(m_Db, "SELECT frame FROM snapshot WHERE timestamp = :timestamp"),
       m_DeltaQuery(m_Db, "SELECT frame FROM delta WHERE timestamp = :timestamp")
 {
     m_FrameSize = 70000; // TODO: read it from DB
