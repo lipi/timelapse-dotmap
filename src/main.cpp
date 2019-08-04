@@ -170,7 +170,6 @@ int main(int argc, char* argv[])
     while (!glfwWindowShouldClose(window))
     {
         static float phase = 0.0f;
-        printHUD(frameProvider.CurrentTimestamp());
         phase += replay.GetSpeed();
         while (phase >= 1.0f) {
             phase -= 1.0f;
@@ -181,8 +180,10 @@ int main(int argc, char* argv[])
         frameQueue.Pop((glm::vec2*)ptr);
         glUnmapBuffer(GL_ARRAY_BUFFER);
 
-        float currentFrame = glfwGetTime();
+        float currentFrame;
+        while ((currentFrame = glfwGetTime()) < lastFrame + (1 / 60.f)) {/* do nothing */}
         deltaTime = currentFrame - lastFrame;
+        printHUD(frameProvider.CurrentTimestamp());
         lastFrame = currentFrame;
 
         processInput(window);
