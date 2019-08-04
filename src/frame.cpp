@@ -97,3 +97,7 @@ void FrameProvider::Next(glm::vec2* frame) {
     m_TimeIndex++;
     m_TimeIndex %= m_Timestamps.size();
 }
+
+uint32_t FrameProvider::CurrentTimestamp() {
+    return m_Timestamps[m_TimeIndex];;
+}

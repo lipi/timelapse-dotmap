@@ -18,6 +18,7 @@ public:
     size_t GetSnapshot(uint32_t timestamp, glm::vec2* frame, size_t size);
     size_t FillDelta(uint32_t timestamp, glm::vec2 *frame, size_t numLocations);
     void Next(glm::vec2 *frame);
+    uint32_t CurrentTimestamp();
 
 private:
     size_t m_FrameSize;

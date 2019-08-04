@@ -27,6 +27,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+void printHUD(time_t epochTime);
 
 INIReader config;
 ReplayParam replay;
@@ -51,6 +53,12 @@ INIReader readIni(char *filename) {
 
     dbFilename = reader.Get("database", "filename", "frames.fb");
 
+    screenWidth = reader.GetReal("window", "width", 960);
+    screenHeight = reader.GetReal("window", "height", 540);
+
+    lastX = screenWidth / 2;
+    lastY = screenHeight / 2;
+
     camera.Position = glm::vec3(reader.GetReal("camera", "x", 174.0f) * render.GetXScale(),
                                 reader.GetReal("camera", "y", -40.0f),
                                 reader.GetReal("camera", "z", 10.0f));
@@ -63,6 +71,12 @@ INIReader readIni(char *filename) {
                                reader.GetReal("camera", "y_max", 90.0f),
                                reader.GetReal("camera", "z_max", 20.0f));
 
+    camera.MovementSpeed = reader.GetReal("mouse", "pan_speed", 2.5);
+    camera.ScrollSpeed = reader.GetReal("mouse", "scroll_speed", 2.5);
+    if (reader.GetBoolean("mouse", "scroll_inverted", false)) {
+        camera.ScrollSpeed *= -1;
+    }
+
     replay = ReplayParam(reader.GetReal("replay", "speed", 1.0f),
                          reader.GetReal("replay", "speed_min", 0.1f),
                          reader.GetReal("replay", "speed_max", 120.0f));
@@ -70,12 +84,6 @@ INIReader readIni(char *filename) {
     render = RenderParam(reader.GetReal("render", "dotsize", 0.005f),
                          reader.GetReal("render", "dotsize_min", 0.001f),
                          reader.GetReal("render", "dotsize_max", 0.025f));
-
-    screenWidth = reader.GetReal("window", "width", 960);
-    screenHeight = reader.GetReal("window", "height", 540);
-
-    lastX = screenWidth / 2;
-    lastY = screenHeight / 2;
 
     return reader;
 }
@@ -117,6 +125,7 @@ int main(int argc, char* argv[])
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
 
     // tell GLFW to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -161,9 +170,7 @@ int main(int argc, char* argv[])
     while (!glfwWindowShouldClose(window))
     {
         static float phase = 0.0f;
-        printf("size: %.4f speed: %.2f x:%.3f y:%.3f z:%.3f\r",
-               render.GetDotSize(), replay.GetSpeed(),
-               camera.Position.x / render.GetXScale(), camera.Position.y, camera.Position.z); 
+        printHUD(frameProvider.CurrentTimestamp());
         phase += replay.GetSpeed();
         while (phase >= 1.0f) {
             phase -= 1.0f;
@@ -174,18 +181,12 @@ int main(int argc, char* argv[])
         frameQueue.Pop((glm::vec2*)ptr);
         glUnmapBuffer(GL_ARRAY_BUFFER);
 
-        // per-frame time logic
-        // --------------------
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        // input
-        // -----
         processInput(window);
 
-        // render
-        // ------
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -193,7 +194,6 @@ int main(int argc, char* argv[])
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), screenWidth / screenHeight, 0.0001f, 1000.0f);
         glm::mat4 view = camera.GetViewMatrix();
         render.UpdateDotScale(camera.Position.z);
-        //spdlog::debug("z: {}", camera.Position.z);
 
         dotShader.use();
         dotShader.setMat4("projection", projection);
@@ -214,8 +214,6 @@ int main(int argc, char* argv[])
             glBindVertexArray(0);
         }
 
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -224,8 +222,6 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-// ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -258,8 +254,6 @@ void processInput(GLFWwindow *window) {
 
 }
 
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     // make sure the viewport matches the new window dimensions; note that width and 
@@ -267,10 +261,9 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
     screenWidth = width;
     screenHeight = height;
+    spdlog::info("screen: {} x {}", width, height);
 }
 
-// glfw: whenever the mouse moves, this callback is called
-// -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
     if (firstMouse)
@@ -289,10 +282,44 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
-// glfw: whenever the mouse scroll wheel scrolls, this callback is called
-// ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(yoffset);
-    //spdlog::info("scroll: {} {}", xoffset, yoffset);
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    static float leftDown;
+    static float rightDown;
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        if (action == GLFW_PRESS) {
+            leftDown = glfwGetTime();
+        }
+        if (action == GLFW_RELEASE) {
+            replay.ChangeSpeed(leftDown - glfwGetTime()); // negative
+        }
+    }
+    if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+        if (action == GLFW_PRESS) {
+            rightDown = glfwGetTime();
+        }
+        if (action == GLFW_RELEASE) {
+            replay.ChangeSpeed(glfwGetTime() - rightDown);
+        }
+    }
+    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS) {
+        // TODO: slider
+    }
+}
+
+void printHUD(time_t epochTime) {
+    char buffer[80];
+    strftime (buffer, 80, "%F %T UTC", std::localtime(&epochTime));
+    printf("%s, dot: %.4f speed: %.2f x:%.3f y:%.3f z:%.3f FPS:%3.1f \r",
+           buffer,
+           render.GetDotSize(), replay.GetSpeed(),
+           camera.Position.x / render.GetXScale(), camera.Position.y, camera.Position.z,
+           1 / deltaTime);
+    fflush(stdout);
 }
